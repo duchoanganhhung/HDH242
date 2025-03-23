@@ -95,69 +95,69 @@
 
 /* Memory range operator */
 /* TODO implement the INCLUDE and OVERLAP checking mechanism */
-#define INCLUDE(x1,x2,y1,y2) (0)
-#define OVERLAP(x1,x2,y1,y2) (0)
+#define INCLUDE(x1,x2,y1,y2) ((y1) >= (x1) && (y2) <= (x2))
+#define OVERLAP(x1,x2,y1,y2) (!((x2) < (y1) || (x1) > (y2)))
 
 /* VM region prototypes */
-struct vm_rg_struct * init_vm_rg(int rg_start, int rg_endi);
-int enlist_vm_rg_node(struct vm_rg_struct **rglist, struct vm_rg_struct* rgnode);
-int enlist_pgn_node(struct pgn_t **pgnlist, int pgn);
-int vmap_page_range(struct pcb_t *caller, int addr, int pgnum, 
-                    struct framephy_struct *frames, struct vm_rg_struct *ret_rg);
-int vm_map_ram(struct pcb_t *caller, int astart, int send, int mapstart, int incpgnum, struct vm_rg_struct *ret_rg);
-int alloc_pages_range(struct pcb_t *caller, int incpgnum, struct framephy_struct **frm_lst);
-int __swap_cp_page(struct memphy_struct *mpsrc, int srcfpn,
-                struct memphy_struct *mpdst, int dstfpn) ;
-int pte_set_fpn(uint32_t *pte, int fpn);
-int pte_set_swap(uint32_t *pte, int swptyp, int swpoff);
-int init_pte(uint32_t *pte,
-             int pre,    // present
-             int fpn,    // FPN
-             int drt,    // dirty
-             int swp,    // swap
-             int swptyp, // swap type
-             int swpoff); //swap offset
-int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr);
-int __free(struct pcb_t *caller, int vmaid, int rgid);
-int __read(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE *data);
-int __write(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE value);
-int init_mm(struct mm_struct *mm, struct pcb_t *caller);
+struct vm_rg_struct* init_vm_rg(int rg_start, int rg_endi);
+int enlist_vm_rg_node(struct vm_rg_struct** rglist, struct vm_rg_struct* rgnode);
+int enlist_pgn_node(struct pgn_t** pgnlist, int pgn);
+int vmap_page_range(struct pcb_t* caller, int addr, int pgnum,
+    struct framephy_struct* frames, struct vm_rg_struct* ret_rg);
+int vm_map_ram(struct pcb_t* caller, int astart, int send, int mapstart, int incpgnum, struct vm_rg_struct* ret_rg);
+int alloc_pages_range(struct pcb_t* caller, int incpgnum, struct framephy_struct** frm_lst);
+int __swap_cp_page(struct memphy_struct* mpsrc, int srcfpn,
+    struct memphy_struct* mpdst, int dstfpn);
+int pte_set_fpn(uint32_t* pte, int fpn);
+int pte_set_swap(uint32_t* pte, int swptyp, int swpoff);
+int init_pte(uint32_t* pte,
+    int pre,    // present
+    int fpn,    // FPN
+    int drt,    // dirty
+    int swp,    // swap
+    int swptyp, // swap type
+    int swpoff); //swap offset
+int __alloc(struct pcb_t* caller, int vmaid, int rgid, int size, int* alloc_addr);
+int __free(struct pcb_t* caller, int vmaid, int rgid);
+int __read(struct pcb_t* caller, int vmaid, int rgid, int offset, BYTE* data);
+int __write(struct pcb_t* caller, int vmaid, int rgid, int offset, BYTE value);
+int init_mm(struct mm_struct* mm, struct pcb_t* caller);
 
 /* VM prototypes */
-int pgalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
-int pgfree_data(struct pcb_t *proc, uint32_t reg_index);
+int pgalloc(struct pcb_t* proc, uint32_t size, uint32_t reg_index);
+int pgfree_data(struct pcb_t* proc, uint32_t reg_index);
 int pgread(
-		struct pcb_t * proc, // Process executing the instruction
-		uint32_t source, // Index of source register
-		uint32_t offset, // Source address = [source] + [offset]
-		uint32_t destination);
+    struct pcb_t* proc, // Process executing the instruction
+    uint32_t source, // Index of source register
+    uint32_t offset, // Source address = [source] + [offset]
+    uint32_t destination);
 int pgwrite(
-		struct pcb_t * proc, // Process executing the instruction
-		BYTE data, // Data to be wrttien into memory
-		uint32_t destination, // Index of destination register
-		uint32_t offset);
+    struct pcb_t* proc, // Process executing the instruction
+    BYTE data, // Data to be wrttien into memory
+    uint32_t destination, // Index of destination register
+    uint32_t offset);
 /* Local VM prototypes */
-struct vm_rg_struct * get_symrg_byid(struct mm_struct* mm, int rgid);
-int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int vmaend);
-int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_struct *newrg);
-int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz);
-int find_victim_page(struct mm_struct* mm, int *pgn);
-struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid);
+struct vm_rg_struct* get_symrg_byid(struct mm_struct* mm, int rgid);
+int validate_overlap_vm_area(struct pcb_t* caller, int vmaid, int vmastart, int vmaend);
+int get_free_vmrg_area(struct pcb_t* caller, int vmaid, int size, struct vm_rg_struct* newrg);
+int inc_vma_limit(struct pcb_t* caller, int vmaid, int inc_sz);
+int find_victim_page(struct mm_struct* mm, int* pgn);
+struct vm_area_struct* get_vma_by_num(struct mm_struct* mm, int vmaid);
 
 /* MEM/PHY protypes */
-int MEMPHY_get_freefp(struct memphy_struct *mp, int *fpn);
-int MEMPHY_put_freefp(struct memphy_struct *mp, int fpn);
-int MEMPHY_read(struct memphy_struct * mp, int addr, BYTE *value);
-int MEMPHY_write(struct memphy_struct * mp, int addr, BYTE data);
-int MEMPHY_dump(struct memphy_struct * mp);
-int init_memphy(struct memphy_struct *mp, int max_size, int randomflg);
+int MEMPHY_get_freefp(struct memphy_struct* mp, int* fpn);
+int MEMPHY_put_freefp(struct memphy_struct* mp, int fpn);
+int MEMPHY_read(struct memphy_struct* mp, int addr, BYTE* value);
+int MEMPHY_write(struct memphy_struct* mp, int addr, BYTE data);
+int MEMPHY_dump(struct memphy_struct* mp);
+int init_memphy(struct memphy_struct* mp, int max_size, int randomflg);
 
 /* print list */
-int print_list_fp(struct framephy_struct *fp);
-int print_list_rg(struct vm_rg_struct *rg);
-int print_list_vma(struct vm_area_struct *rg);
+int print_list_fp(struct framephy_struct* fp);
+int print_list_rg(struct vm_rg_struct* rg);
+int print_list_vma(struct vm_area_struct* rg);
 
 
-int print_list_pgn(struct pgn_t *ip);
-int print_pgtbl(struct pcb_t *ip, uint32_t start, uint32_t end);
+int print_list_pgn(struct pgn_t* ip);
+int print_pgtbl(struct pcb_t* ip, uint32_t start, uint32_t end);
 #endif
