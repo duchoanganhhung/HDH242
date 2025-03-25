@@ -1,4 +1,3 @@
-
 INC = -Iinclude
 LIB = -lpthread
 
@@ -8,13 +7,11 @@ INCLUDE = include
 
 CC = gcc
 DEBUG = -g
-CFLAGS = -Wall -c $(DEBUG)
-LFLAGS = -Wall $(DEBUG)
+CFLAGS = -Wall -c $(DEBUG) $(INC)
+LFLAGS = -Wall $(DEBUG) $(INC)
 
 vpath %.c $(SRC)
 vpath %.h $(INCLUDE)
-
-MAKE = $(CC) $(INC) 
 
 # Object files needed by modules
 MEM_OBJ = $(addprefix $(OBJ)/, paging.o mem.o cpu.o loader.o)
@@ -25,29 +22,20 @@ SCHED_OBJ = $(addprefix $(OBJ)/, cpu.o loader.o)
 HEADER = $(wildcard $(INCLUDE)/*.h)
  
 all: os
-#mem sched os
 
-# Just compile memory management modules
-mem: $(MEM_OBJ)
-	$(MAKE) $(LFLAGS) $(MEM_OBJ) -o mem $(LIB)
-
-# Just compile scheduler
-sched: $(SCHED_OBJ)
-	$(MAKE) $(LFLAGS) $(MEM_OBJ) -o sched $(LIB)
-
-# Compile syscall
+# Compile the syscall table
 syscalltbl.lst: $(SRC)/syscall.tbl
-	@echo $(OS_OBJ)
+	@echo "Generating syscall table..."
 	chmod +x $(SRC)/syscalltbl.sh
-	$(SRC)/syscalltbl.sh $< $(SRC)/$@ 
-#	mv $(OBJ)/syscalltbl.lst $(INCLUDE)/
+	$(SRC)/syscalltbl.sh $< $(SRC)/syscalltbl.lst 
 
-# Compile the whole OS simulation
+# Compile OS with all syscalls
 os: $(OBJ) syscalltbl.lst $(OS_OBJ)
-	$(MAKE) $(LFLAGS) $(OS_OBJ) -o os $(LIB)
+	$(CC) $(LFLAGS) $(OS_OBJ) -o os $(LIB)
 
+# Compile syscall objects
 $(OBJ)/%.o: %.c ${HEADER} $(OBJ)
-	$(MAKE) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 # Prepare objectives container
 $(OBJ):
@@ -57,3 +45,7 @@ clean:
 	rm -f $(SRC)/*.lst
 	rm -f $(OBJ)/*.o os sched mem
 	rm -rf $(OBJ)
+
+test_syscall: $(OBJ) syscalltbl.lst $(SYSCALL_OBJ) obj/mem.o obj/mm.o obj/mm-vm.o obj/mm-memphy.o obj/libmem.o src/test.c
+	$(CC) $(LFLAGS) $(SYSCALL_OBJ) obj/mem.o obj/mm.o obj/mm-vm.o obj/mm-memphy.o obj/libmem.o src/test.c -o test
+
