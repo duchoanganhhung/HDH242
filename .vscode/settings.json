@@ -57,6 +57,9 @@
     "*.embeddedhtml": "html",
     "*.css": "tailwindcss",
     "*.scss": "tailwindcss",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "mem.h": "c",
+    "libmem.h": "c",
+    "mm.h": "c"
   }
 }
