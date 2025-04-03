@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 
- /*
-  *  MEMPHY_mv_csr - move MEMPHY cursor
-  *  @mp: memphy struct
-  *  @offset: offset
-  */
-int MEMPHY_mv_csr(struct memphy_struct* mp, int offset)
+/*
+ *  MEMPHY_mv_csr - move MEMPHY cursor
+ *  @mp: memphy struct
+ *  @offset: offset
+ */
+int MEMPHY_mv_csr(struct memphy_struct *mp, int offset)
 {
    int numstep = 0;
 
@@ -35,7 +35,7 @@ int MEMPHY_mv_csr(struct memphy_struct* mp, int offset)
  *  @addr: address
  *  @value: obtained value
  */
-int MEMPHY_seq_read(struct memphy_struct* mp, int addr, BYTE* value)
+int MEMPHY_seq_read(struct memphy_struct *mp, int addr, BYTE *value)
 {
    if (mp == NULL)
       return -1;
@@ -55,7 +55,7 @@ int MEMPHY_seq_read(struct memphy_struct* mp, int addr, BYTE* value)
  *  @addr: address
  *  @value: obtained value
  */
-int MEMPHY_read(struct memphy_struct* mp, int addr, BYTE* value)
+int MEMPHY_read(struct memphy_struct *mp, int addr, BYTE *value)
 {
    if (mp == NULL)
       return -1;
@@ -74,7 +74,7 @@ int MEMPHY_read(struct memphy_struct* mp, int addr, BYTE* value)
  *  @addr: address
  *  @data: written data
  */
-int MEMPHY_seq_write(struct memphy_struct* mp, int addr, BYTE value)
+int MEMPHY_seq_write(struct memphy_struct *mp, int addr, BYTE value)
 {
 
    if (mp == NULL)
@@ -95,7 +95,7 @@ int MEMPHY_seq_write(struct memphy_struct* mp, int addr, BYTE value)
  *  @addr: address
  *  @data: written data
  */
-int MEMPHY_write(struct memphy_struct* mp, int addr, BYTE data)
+int MEMPHY_write(struct memphy_struct *mp, int addr, BYTE data)
 {
    if (mp == NULL)
       return -1;
@@ -112,11 +112,11 @@ int MEMPHY_write(struct memphy_struct* mp, int addr, BYTE data)
  *  MEMPHY_format-format MEMPHY device
  *  @mp: memphy struct
  */
-int MEMPHY_format(struct memphy_struct* mp, int pagesz)
+int MEMPHY_format(struct memphy_struct *mp, int pagesz)
 {
    /* This setting come with fixed constant PAGESZ */
    int numfp = mp->maxsz / pagesz;
-   struct framephy_struct* newfst, * fst;
+   struct framephy_struct *newfst, *fst;
    int iter = 0;
 
    if (numfp <= 0)
@@ -140,9 +140,9 @@ int MEMPHY_format(struct memphy_struct* mp, int pagesz)
    return 0;
 }
 
-int MEMPHY_get_freefp(struct memphy_struct* mp, int* retfpn)
+int MEMPHY_get_freefp(struct memphy_struct *mp, int *retfpn)
 {
-   struct framephy_struct* fp = mp->free_fp_list;
+   struct framephy_struct *fp = mp->free_fp_list;
 
    if (fp == NULL)
       return -1;
@@ -158,33 +158,34 @@ int MEMPHY_get_freefp(struct memphy_struct* mp, int* retfpn)
    return 0;
 }
 
-int MEMPHY_dump(struct memphy_struct* mp)
+int MEMPHY_dump(struct memphy_struct *mp)
 {
    /*TODO dump memphy contnt mp->storage
     *     for tracing the memory content
     */
-   if (mp == NULL || mp->storage == NULL) {
+   if (mp == NULL || mp->storage == NULL)
+   {
       printf("[ERROR] Invalid memory structure!\n");
       return -1;
    }
 
-   printf("===== Memory Dump (size: %d bytes) =====\n", mp->maxsz);
+   // printf("===== Memory Dump (size: %d bytes) =====\n", mp->maxsz);
 
-   for (int i = 0; i < mp->maxsz; i++) {
-      if (i % 16 == 0) {
-         printf("\n0x%04X: ", i);
-      }
-      printf("%02X ", mp->storage[i]);
-   }
-   printf("\n========================================\n");
+   // for (int i = 0; i < mp->maxsz; i++) {
+   //    if (i % 16 == 0) {
+   //       printf("\n0x%04X: ", i);
+   //    }
+   //    printf("%02X ", mp->storage[i]);
+   // }
+   // printf("\n========================================\n");
 
    return 0;
 }
 
-int MEMPHY_put_freefp(struct memphy_struct* mp, int fpn)
+int MEMPHY_put_freefp(struct memphy_struct *mp, int fpn)
 {
-   struct framephy_struct* fp = mp->free_fp_list;
-   struct framephy_struct* newnode = malloc(sizeof(struct framephy_struct));
+   struct framephy_struct *fp = mp->free_fp_list;
+   struct framephy_struct *newnode = malloc(sizeof(struct framephy_struct));
 
    /* Create new node with value fpn */
    newnode->fpn = fpn;
@@ -197,9 +198,9 @@ int MEMPHY_put_freefp(struct memphy_struct* mp, int fpn)
 /*
  *  Init MEMPHY struct
  */
-int init_memphy(struct memphy_struct* mp, int max_size, int randomflg)
+int init_memphy(struct memphy_struct *mp, int max_size, int randomflg)
 {
-   mp->storage = (BYTE*)malloc(max_size * sizeof(BYTE));
+   mp->storage = (BYTE *)malloc(max_size * sizeof(BYTE));
    mp->maxsz = max_size;
    memset(mp->storage, 0, max_size * sizeof(BYTE));
 

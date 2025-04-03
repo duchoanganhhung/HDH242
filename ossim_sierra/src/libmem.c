@@ -71,11 +71,10 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   /*Allocate at the toproof */
   struct vm_rg_struct rgnode;
 
-  /* TODO: commit the vmaid */
-  // rgnode.vmaid
-
   // Lock the memory mutex at the beginning
   pthread_mutex_lock(&mmvm_lock);
+
+  /* TODO: commit the vmaid */
 
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
   {
@@ -93,7 +92,6 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   /* TODO retrive current vma if needed, current comment out due to compiler redundant warning*/
   /*Attempt to increate limit to get space */
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-
   if (cur_vma == NULL)
   {
     pthread_mutex_unlock(&mmvm_lock);
@@ -110,33 +108,32 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
    * sys_memap with SYSMEM_INC_OP
    */
   struct sc_regs regs;
-  // regs.a1 = ...
   regs.a1 = vmaid;
-  // regs.a2 = ...
   regs.a2 = inc_sz;
-  // regs.a3 = ...
-  regs.a3 = SYSMEM_INC_OP;
+  regs.flags = SYSMEM_INC_OP;
 
   /* SYSCALL 17 sys_memmap */
-  syscall(caller, 17, &regs);
+  inc_limit_ret = syscall(caller, 17, &regs);
   // Failed to increase limit
   if (inc_limit_ret < 0)
   {
     pthread_mutex_unlock(&mmvm_lock);
     return -1;
   }
+
   /* TODO: commit the limit increment */
   cur_vma->sbrk += inc_sz;
+
   /* TODO: commit the allocation address
   // *alloc_addr = ...
   */
   *alloc_addr = old_sbrk;
 
+  // Update symbol region table
   caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
   caller->mm->symrgtbl[rgid].rg_end = old_sbrk + size - 1;
 
   pthread_mutex_unlock(&mmvm_lock);
-
   return 0;
 }
 
@@ -149,23 +146,28 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
  */
 int __free(struct pcb_t *caller, int vmaid, int rgid)
 {
-  if (rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
-    return -1;
   // struct vm_rg_struct rgnode;
-  pthread_mutex_lock(&mmvm_lock);
-
-  // Get the symbol region to be freed
-  struct vm_rg_struct *rgnode = get_symrg_byid(caller->mm, rgid);
 
   // Dummy initialization for avoding compiler dummay warning
   // in incompleted TODO code rgnode will overwrite through implementing
   // the manipulation of rgid later
+
+  if (rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
+    return -1;
+
+  /* TODO: Manage the collect freed region to freerg_list */
+  // Lock the memory mutex at the beginning
+  pthread_mutex_lock(&mmvm_lock);
+
+  // Get the symbol region to be freed
+  struct vm_rg_struct *rgnode = get_symrg_byid(caller->mm, rgid);
   if (rgnode == NULL || rgnode->rg_start == 0 || rgnode->rg_end == 0)
   {
     pthread_mutex_unlock(&mmvm_lock);
     return -1; // Invalid region
   }
 
+  // Get the VMA where this region belongs
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
   if (cur_vma == NULL)
   {
@@ -173,26 +175,27 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
     return -1; // Invalid VMA
   }
 
-  /* TODO: Manage the collect freed region to freerg_list */
-  struct vm_rg_struct *new_free_region = (struct vm_rg_struct *)malloc(sizeof(struct vm_rg_struct));
-  if (new_free_region == NULL)
-    return -1;
-
-  new_free_region->rg_start = rgnode->rg_start;
-  new_free_region->rg_end = rgnode->rg_end;
-  new_free_region->rg_next = NULL;
-  /*enlist the obsoleted memory region */
-  // enlist_vm_freerg_list();
-  if (enlist_vm_freerg_list(caller->mm, new_free_region) != 0)
+  // Create a new free region node to add to the free list
+  struct vm_rg_struct *free_rg = malloc(sizeof(struct vm_rg_struct));
+  if (free_rg == NULL)
   {
-    free(new_free_region);
-    return -1;
+    pthread_mutex_unlock(&mmvm_lock);
+    return -1; // Out of memory for metadata
   }
 
-  // Clear the symbol table entry for the freed region
+  // Copy the region information
+  free_rg->rg_start = rgnode->rg_start;
+  free_rg->rg_end = rgnode->rg_end;
+  free_rg->rg_next = NULL;
+
+  /*enlist the obsoleted memory region */
+  enlist_vm_freerg_list(caller->mm, free_rg);
+
+  // Clear the symbol table entry
   rgnode->rg_start = 0;
   rgnode->rg_end = 0;
 
+  // Unlock memory mutex
   pthread_mutex_unlock(&mmvm_lock);
 
   return 0;
@@ -262,15 +265,13 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
      * with operation SYSMEM_SWP_OP
      */
     struct sc_regs regs;
-    // regs.a1 =...
-    regs.a1 = vicpgn;
-    // regs.a2 =...
+    regs.a1 = vicfpn;
     regs.a2 = swpfpn;
-    // regs.a3 =..
-    regs.a3 = SYSMEM_SWP_OP;
+    regs.flags = SYSMEM_SWP_OP;
 
     /* SYSCALL 17 sys_memmap */
     syscall(caller, 17, &regs);
+
     /* TODO copy target frame form swap to mem
      * SWP(tgtfpn <--> vicfpn)
      * SYSCALL 17 sys_memmap
@@ -281,29 +282,30 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
     //regs.a2 =...
     //regs.a3 =..
     */
-    regs.a1 = PAGING_PTE_SWP(pte);
-    regs.a2 = vicpgn;
-    regs.a3 = SYSMEM_SWP_OP;
+
+    int tgtfpn = PAGING_PTE_SWP(pte);
+    regs.a1 = tgtfpn;
+    regs.a2 = vicfpn;
+    regs.flags = SYSMEM_SWP_OP;
 
     /* SYSCALL 17 sys_memmap */
     syscall(caller, 17, &regs);
-    /* Update page table */
-    // pte_set_swap()
-    // mm->pgd;
 
-    /* Update its online status of the target page */
-    // pte_set_fpn() &
-    // mm->pgd[pgn];
-    // pte_set_fpn();
+    /* Update page table */
+    // Update victim's page table entry
     pte_set_swap(victim_pte, 0, swpfpn);
     CLRBIT(*victim_pte, PAGING_PTE_PRESENT_MASK);
 
-    pte_set_fpn(&mm->pgd[pgn], vicpgn);
-    PAGING_PTE_SET_PRESENT(mm->pgd[pgn]);
+    /* Update its online status of the target page */
+    // Update requested page table entry
+    pte_set_fpn(&mm->pgd[pgn], vicfpn);
+    PAGING_PTE_SET_PRESENT(mm->pgd[pgn]); // Mark it as present in memory
 
+    // Update FIFO list
     enlist_pgn_node(&caller->mm->fifo_pgn, pgn);
   }
 
+  // Retrieve the frame number after ensuring it's in RAM
   *fpn = PAGING_FPN(mm->pgd[pgn]);
 
   return 0;
@@ -330,23 +332,18 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
    *  MEMPHY READ
    *  SYSCALL 17 sys_memmap with SYSMEM_IO_READ
    */
-  // int phyaddr
-  // struct sc_regs regs;
-  // regs.a1 = ...
-  // regs.a2 = ...
-  // regs.a3 = ...
+  // Compute physical address
+  int phyaddr = (fpn * PAGING_PAGESZ) + off;
+
+  struct sc_regs regs;
+  regs.a1 = caller->mram;
+  regs.a2 = data;
+  regs.flags = SYSMEM_IO_READ;
 
   /* SYSCALL 17 sys_memmap */
-
-  int phyaddr = (fpn << PAGING_ADDR_PGN_LOBIT) | PAGING_OFFST(addr);
-  struct sc_regs regs;
-  regs.a1 = (uintptr_t)caller->mram;
-  regs.a2 = data;
-  regs.a3 = SYSMEM_IO_READ;
-
   syscall(caller, 17, &regs);
 
-  // Update data
+  // Update data (? deprecated????)
   // data = (BYTE)
 
   return 0;
@@ -373,23 +370,18 @@ int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller)
    *  MEMPHY WRITE
    *  SYSCALL 17 sys_memmap with SYSMEM_IO_WRITE
    */
-  // int phyaddr
-  // struct sc_regs regs;
-  // regs.a1 = ...
-  // regs.a2 = ...
-  // regs.a3 = ...
+  int phyaddr = (fpn * PAGING_PAGESZ) + off;
 
-  /* SYSCALL 17 sys_memmap */
-
-  int phyaddr = (fpn << PAGING_ADDR_PGN_LOBIT) | PAGING_OFFST(addr);
   struct sc_regs regs;
   regs.a1 = caller->mram;
   regs.a2 = phyaddr;
   regs.a3 = &value;
   regs.flags = SYSMEM_IO_WRITE;
+
+  /* SYSCALL 17 sys_memmap */
   syscall(caller, 17, &regs);
 
-  // Update data
+  // Update data (? deprecated????)
   // data = (BYTE)
 
   return 0;
@@ -427,7 +419,7 @@ int libread(
   int val = __read(proc, 0, source, offset, &data);
 
   /* TODO update result of reading action*/
-  // destination
+  *destination = (uint32_t)data;
 #ifdef IODUMP
   printf("read region=%d offset=%d value=%d\n", source, offset, data);
 #ifdef PAGETBL_DUMP
@@ -515,9 +507,18 @@ int free_pcb_memph(struct pcb_t *caller)
 int find_victim_page(struct mm_struct *mm, int *retpgn)
 {
   struct pgn_t *pg = mm->fifo_pgn;
+  if (pg == NULL)
+  {
+    return -1; // FIFO list empty
+  }
 
   /* TODO: Implement the theorical mechanism to find the victim page */
+  *retpgn = pg->pgn;
 
+  // Update the FIFO to pop the first element
+  mm->fifo_pgn = pg->pg_next;
+
+  // Free the victim page (? WHY)
   free(pg);
 
   return 0;
@@ -536,24 +537,24 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
   struct vm_rg_struct *rgit = cur_vma->vm_freerg_list;
 
   if (rgit == NULL)
-  {
     return -1;
-  }
 
   /* Probe unintialized newrg */
   newrg->rg_start = newrg->rg_end = -1;
 
   /* TODO Traverse on list of free vm region to find a fit space */
-  // while (...)
-  //  ..
-
   while (rgit != NULL)
   {
-    if ((rgit->rg_end - rgit->rg_start) >= size)
+    int region_size = rgit->rg_end - rgit->rg_start;
+
+    // Check if size is enough
+    if (region_size >= size)
     {
+      // Update the region boundaries
       newrg->rg_start = rgit->rg_start;
       newrg->rg_end = newrg->rg_start + size;
 
+      // Update free region's start
       rgit->rg_start = newrg->rg_end;
 
       return 0;
