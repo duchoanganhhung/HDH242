@@ -396,7 +396,13 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
   {
     pgn_start = 0;
     struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, 0);
+    if (cur_vma == NULL)
+    {
+      printf("Error: cur_vma is NULL\n");
+      return -1;
+    }
     end = cur_vma->vm_end;
+    // printf("end = %d\n", end);
   }
   pgn_start = PAGING_PGN(start);
   pgn_end = PAGING_PGN(end);
@@ -408,11 +414,11 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
     return -1;
   }
 
-  // if (pgn_start == pgn_end)
-  // {
-  //   printf("No valid page range to print.\n");
-  //   return -1; // No valid range to print.
-  // }
+  if (pgn_start == pgn_end)
+  {
+    printf("No valid page range to print.\n");
+    // return -1; // No valid range to print.
+  }
 
   for (pgit = pgn_start; pgit < pgn_end; pgit++)
   {

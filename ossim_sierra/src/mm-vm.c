@@ -33,11 +33,8 @@ struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid)
 
   int vmait = pvma->vm_id;
 
-  while (vmait < vmaid)
+  while (pvma && vmait < vmaid)
   {
-    if (pvma == NULL)
-      return NULL;
-
     pvma = pvma->vm_next;
     vmait = pvma ? pvma->vm_id : -1;
   }
@@ -142,7 +139,8 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz)
   // cur_vma->vm_end...
   cur_vma->vm_end += inc_amt;
   // inc_limit_ret...
-
+  printf("vm_map_ram status: %d\n", vm_map_ram(caller, area->rg_start, area->rg_end,
+                                               old_end, incnumpage, newrg));
   if (vm_map_ram(caller, area->rg_start, area->rg_end,
                  old_end, incnumpage, newrg) < 0)
   {

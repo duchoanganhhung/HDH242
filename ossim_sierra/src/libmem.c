@@ -114,6 +114,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 
   /* SYSCALL 17 sys_memmap */
   inc_limit_ret = syscall(caller, 17, &regs);
+
   // Failed to increase limit
   if (inc_limit_ret < 0)
   {

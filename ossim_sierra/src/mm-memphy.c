@@ -104,6 +104,7 @@ int MEMPHY_write(struct memphy_struct *mp, int addr, BYTE data)
       mp->storage[addr] = data;
    else /* Sequential access device */
       return MEMPHY_seq_write(mp, addr, data);
+
    return 0;
 }
 
