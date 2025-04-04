@@ -104,7 +104,6 @@ int MEMPHY_write(struct memphy_struct *mp, int addr, BYTE data)
       mp->storage[addr] = data;
    else /* Sequential access device */
       return MEMPHY_seq_write(mp, addr, data);
-
    return 0;
 }
 
@@ -168,16 +167,6 @@ int MEMPHY_dump(struct memphy_struct *mp)
       printf("[ERROR] Invalid memory structure!\n");
       return -1;
    }
-
-   // printf("===== Memory Dump (size: %d bytes) =====\n", mp->maxsz);
-
-   // for (int i = 0; i < mp->maxsz; i++) {
-   //    if (i % 16 == 0) {
-   //       printf("\n0x%04X: ", i);
-   //    }
-   //    printf("%02X ", mp->storage[i]);
-   // }
-   // printf("\n========================================\n");
 
    return 0;
 }

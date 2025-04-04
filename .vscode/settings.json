@@ -60,6 +60,9 @@
     "stdlib.h": "c",
     "mem.h": "c",
     "libmem.h": "c",
-    "mm.h": "c"
+    "mm.h": "c",
+    "*.lst": "c",
+    "string.h": "c",
+    "common.h": "c"
   }
 }

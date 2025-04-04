@@ -211,8 +211,19 @@ int liballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
   /* TODO Implement allocation on vm area 0 */
   int addr;
 
+  int alloc_ret = __alloc(proc, 0, reg_index, size, &addr);
+  printf("===== PHYSICAL MEMORY AFTER ALLOCATING =====\n");
+  printf("PID=%d - Region=%d - Address=%08X - Size=%d byte\n", proc->pid, reg_index, proc->regs[0], size);
+
+  struct vm_area_struct *cur_vma = get_vma_by_num(proc->mm, 0);
+
+  uint32_t end = cur_vma->vm_end;
+
+  print_pgtbl(proc, 0, -1);
+
   /* By default using vmaid = 0 */
-  return __alloc(proc, 0, reg_index, size, &addr);
+
+  return alloc_ret;
 }
 
 /*libfree - PAGING-based free a region memory
@@ -224,7 +235,8 @@ int liballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
 int libfree(struct pcb_t *proc, uint32_t reg_index)
 {
   /* TODO Implement free region */
-
+  printf("===== PHYSICAL MEMORY AFTER DEALLOCATING =====\n");
+  printf("PID=%d - Region=%d\n", proc->pid, reg_index);
   /* By default using vmaid = 0 */
   return __free(proc, 0, reg_index);
 }
@@ -421,6 +433,7 @@ int libread(
   /* TODO update result of reading action*/
   *destination = (uint32_t)data;
 #ifdef IODUMP
+  printf("===== PHYSICAL MEMORY AFTER READING =====\n");
   printf("read region=%d offset=%d value=%d\n", source, offset, data);
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
@@ -460,6 +473,7 @@ int libwrite(
     uint32_t offset)
 {
 #ifdef IODUMP
+  printf("===== PHYSICAL MEMORY AFTER WRITING =====\n");
   printf("write region=%d offset=%d value=%d\n", destination, offset, data);
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL

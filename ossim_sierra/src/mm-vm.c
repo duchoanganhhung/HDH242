@@ -26,7 +26,10 @@ struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid)
   struct vm_area_struct *pvma = mm->mmap;
 
   if (mm->mmap == NULL)
+  {
+    fprintf(stderr, "Error: mm->mmap is NULL\n");
     return NULL;
+  }
 
   int vmait = pvma->vm_id;
 
@@ -36,7 +39,7 @@ struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid)
       return NULL;
 
     pvma = pvma->vm_next;
-    vmait = pvma->vm_id;
+    vmait = pvma ? pvma->vm_id : -1;
   }
 
   return pvma;
@@ -110,6 +113,7 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int 
  *@inc_sz: increment size
  *
  */
+
 int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz)
 {
 
@@ -141,7 +145,11 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz)
 
   if (vm_map_ram(caller, area->rg_start, area->rg_end,
                  old_end, incnumpage, newrg) < 0)
-    return -1; /* Map the memory to MEMRAM */
+  {
+    free(newrg);
+    return -1;
+  }
+  /* Map the memory to MEMRAM */
 
   return 0;
 }

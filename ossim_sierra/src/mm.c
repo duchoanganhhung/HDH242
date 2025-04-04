@@ -383,7 +383,7 @@ int print_list_pgn(struct pgn_t *ip)
     printf("va[%d]-\n", ip->pgn);
     ip = ip->pg_next;
   }
-  printf("n");
+  printf("\n");
   return 0;
 }
 
@@ -401,19 +401,34 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
   pgn_start = PAGING_PGN(start);
   pgn_end = PAGING_PGN(end);
 
-  printf("print_pgtbl: %d - %d", start, end);
+  printf("print_pgtbl: %d - %d\n", start, end);
   if (caller == NULL)
   {
     printf("NULL caller\n");
     return -1;
   }
-  printf("\n");
+
+  // if (pgn_start == pgn_end)
+  // {
+  //   printf("No valid page range to print.\n");
+  //   return -1; // No valid range to print.
+  // }
 
   for (pgit = pgn_start; pgit < pgn_end; pgit++)
   {
+
     printf("%08ld: %08x\n", pgit * sizeof(uint32_t), caller->mm->pgd[pgit]);
   }
 
+  for (pgit = pgn_start; pgit < pgn_end; pgit++)
+  {
+    uint32_t pte = caller->mm->pgd[pgit];
+
+    int frame_number = PAGING_FPN(pte);
+    printf("Page Number: %d -> Frame Number: %d\n", pgit, frame_number);
+  }
+
+  printf("================================================================\n");
   return 0;
 }
 
