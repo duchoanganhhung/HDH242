@@ -10,23 +10,28 @@ extern int __sys_killall(struct pcb_t *caller, struct sc_regs* regs);
 
 
 int main() {
+    //printf("BRUH\n");
     if (!current_process) {
         printf("[INFO] No active process. Creating a test process...\n");
         current_process = malloc(sizeof(struct pcb_t));
+        
         memset(current_process, 0, sizeof(struct pcb_t));
-
+        
         if (!current_process) {
             printf("[ERROR] Failed to allocate memory for current_process!\n");
             return 1;
+        }
+        else {
+            printf("Process created\n");
         }
         current_process->pid = 1;  
     }
 
     struct sc_regs fake_regs;  
 
-   
+    //printf("BRUH5mak\n");
     uint32_t mem_region = liballoc(current_process, 10, 1);  
-
+    printf("BRUH3\n");
     if (mem_region == 0) {  
         printf("[ERROR] Memory allocation failed!\n");
         return 1;

@@ -4,6 +4,7 @@
 #include "sched.h"
 #include "loader.h"
 #include "mm.h"
+#include "syscall.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -45,6 +46,7 @@ struct cpu_args {
 
 
 static void * cpu_routine(void * args) {
+	//printf("QUA NGU\n");
 	struct timer_id_t * timer_id = ((struct cpu_args*)args)->timer_id;
 	int id = ((struct cpu_args*)args)->id;
 	/* Check for new process in ready queue */

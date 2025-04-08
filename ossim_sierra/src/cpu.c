@@ -68,6 +68,7 @@ int run(struct pcb_t *proc)
 
 	struct inst_t ins = proc->code->text[proc->pc];
 	proc->pc++;
+	printf("PC=%d | Opcode=%d | Args=%d %d %d %d\n", proc->pc - 1, ins.opcode, ins.arg_0, ins.arg_1, ins.arg_2, ins.arg_3);
 	int stat = 1;
 switch (ins.opcode)
 	{
@@ -103,6 +104,7 @@ switch (ins.opcode)
 #endif
 		break;
 	case SYSCALL:
+		//printf("debug");
 		stat = libsyscall(proc, ins.arg_0, ins.arg_1, ins.arg_2, ins.arg_3);
 		break;
 	default:

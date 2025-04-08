@@ -18,6 +18,7 @@ struct pcb_t *current_process = NULL;
 
 int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
 {
+    printf("debug\n");
     char proc_name[100] = {0};
     uint32_t data;
 
@@ -29,7 +30,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
     //proc_name = libread..
     int i = 0;
     data = 0;
-    while(i < 99){
+    while (i <= 99){
         libread(caller, memrg, i, &data);
         if (data == -1 || data == 0) {
             break;
@@ -43,29 +44,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
     /* TODO: Traverse proclist to terminate the proc
      *       stcmp to check the process match proc_name
      */
-    struct queue_t *queues[] = { 
-        caller->running_list, 
-        caller->mlq_ready_queue 
-    };
-    for (int idx = 0; idx < 2; ++idx) {
-        struct queue_t *queue = queues[idx];
-        if (!queue) {
-            continue;
-        }
-        int newsize = 0;  
-        for (int i = 0; i < queue->size; ++i) {
-            struct pcb_t *proc = queue->proc[i];
-            if (strcmp(proc->path, proc_name) == 0) {
-                printf("Terminating process: PID %d (%s)\n", proc->pid, proc->path);
-                libfree(proc, proc->bp);
-                //proc = NULL;
-            } 
-            else {
-                queue->proc[newsize++] = queue->proc[i];
-            }
-        }
-        queue->size = newsize; 
-    }
+    
 
     /* TODO Maching and terminating 
      *       all processes with given
