@@ -254,7 +254,7 @@ for (int i = 0; i < num_pages; i++) {
  
    uint32_t start = proc->regs[0];
 uint32_t end = start + size;
-printf("DEBUG: cur_vma->vm_start = %d, vm_end = %d\n", cur_vma->vm_start, cur_vma->vm_end);
+//printf("DEBUG: cur_vma->vm_start = %d, vm_end = %d\n", cur_vma->vm_start, cur_vma->vm_end);
 
 print_pgtbl(proc, start, end);
 
@@ -387,7 +387,7 @@ print_pgtbl(proc, start, end);
  
    struct sc_regs regs;
    regs.a1 = caller->mram;
-   regs.a2 = data;
+   regs.a2 = phyaddr;
    regs.flags = SYSMEM_IO_READ;
  
    /* SYSCALL 17 sys_memmap */
@@ -395,7 +395,7 @@ print_pgtbl(proc, start, end);
  
    // Update data (? deprecated????)
    // data = (BYTE)
- 
+   *data = regs.a3;
    return 0;
  }
  
@@ -425,7 +425,7 @@ print_pgtbl(proc, start, end);
    struct sc_regs regs;
    regs.a1 = caller->mram;
    regs.a2 = phyaddr;
-   regs.a3 = &value;
+   regs.a3 = value;
    regs.flags = SYSMEM_IO_WRITE;
  
    /* SYSCALL 17 sys_memmap */

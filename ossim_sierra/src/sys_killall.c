@@ -50,6 +50,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
      *       all processes with given
      *        name in var proc_name
      */
+    kill_process(proc_name);
 
     return 0; 
 }

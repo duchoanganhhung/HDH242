@@ -414,9 +414,12 @@
      return -1;
    }
  
+   //printf("DCM DEBUG %08ld: %08x\n", 0 * sizeof(uint32_t), caller->mm->pgd[0]);
+
    if (pgn_start == pgn_end)
    {
-     printf("No valid page range to print.\n");
+      ++pgn_end;
+     //printf("No valid page range to print.\n");
      // return -1; // No valid range to print.
    }
  
