@@ -219,6 +219,7 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
    * do the swaping all to swapper to get the all in ram */
   vmap_page_range(caller, mapstart, incpgnum, frm_lst, ret_rg);
 
+  printf("[vm_map_ram] Mapping %d pages from 0x%x to 0x%x\n", incpgnum, astart, aend);
   return 0;
 }
 
@@ -414,11 +415,12 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
     return -1;
   }
 
-  if (pgn_start == pgn_end)
+  if (pgn_start >= pgn_end)
   {
-    printf("No valid page range to print.\n");
-    // return -1; // No valid range to print.
+    printf("Invalid page range: %d - %d\n", pgn_start, pgn_end);
+    return -1;
   }
+  // return -1; // No valid range to print.
 
   for (pgit = pgn_start; pgit < pgn_end; pgit++)
   {

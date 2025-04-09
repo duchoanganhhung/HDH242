@@ -8,7 +8,7 @@
  * for the sole purpose of studying while attending the course CO2018.
  */
 
-// #ifdef MM_PAGING
+#ifdef MM_PAGING
 /*
  * System Library
  * Memory Module Library libmem.c
@@ -213,12 +213,9 @@ int liballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
   int addr;
 
   int alloc_ret = __alloc(proc, 0, reg_index, size, &addr);
+
   printf("===== PHYSICAL MEMORY AFTER ALLOCATING =====\n");
-  printf("PID=%d - Region=%d - Address=%08X - Size=%d byte\n", proc->pid, reg_index, proc->regs[0], size);
-
-  struct vm_area_struct *cur_vma = get_vma_by_num(proc->mm, 0);
-
-  uint32_t end = cur_vma->vm_end;
+  printf("PID=%d - Region=%d - Address=%08X - Size=%d byte\n", proc->pid, reg_index, addr, size);
 
   print_pgtbl(proc, 0, -1);
 
@@ -581,4 +578,4 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
   return -1;
 }
 
-// #endif
+#endif

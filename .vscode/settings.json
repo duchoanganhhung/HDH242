@@ -63,6 +63,9 @@
     "mm.h": "c",
     "*.lst": "c",
     "string.h": "c",
-    "common.h": "c"
+    "common.h": "c",
+    "os-mm.h": "c",
+    "os-cfg.h": "c",
+    "type_traits": "c"
   }
 }

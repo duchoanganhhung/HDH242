@@ -49,8 +49,8 @@ int read(
 }
 
 int write(
-	struct pcb_t *proc,	// Process executing the instruction
-	BYTE data,		// Data to be wrttien into memory
+	struct pcb_t *proc,	  // Process executing the instruction
+	BYTE data,			  // Data to be wrttien into memory
 	uint32_t destination, // Index of destination register
 	uint32_t offset)
 { // Destination address =
@@ -67,14 +67,16 @@ int run(struct pcb_t *proc)
 	}
 
 	struct inst_t ins = proc->code->text[proc->pc];
+	printf("Executing PID %d, PC = %d, opcode = %d\n", proc->pid, proc->pc - 1, ins.opcode);
 	proc->pc++;
 	int stat = 1;
-switch (ins.opcode)
+	switch (ins.opcode)
 	{
 	case CALC:
 		stat = calc(proc);
 		break;
 	case ALLOC:
+		printf("DEBUG: entering ALLOC instruction...\n");
 #ifdef MM_PAGING
 		stat = liballoc(proc, ins.arg_0, ins.arg_1);
 #else
