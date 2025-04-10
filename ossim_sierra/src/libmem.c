@@ -354,10 +354,10 @@ print_pgtbl(proc, start, end);
      // Update FIFO list
      enlist_pgn_node(&caller->mm->fifo_pgn, pgn);
    }
- 
+   
    // Retrieve the frame number after ensuring it's in RAM
    *fpn = PAGING_FPN(mm->pgd[pgn]);
- 
+   
    return 0;
  }
  
@@ -386,8 +386,8 @@ print_pgtbl(proc, start, end);
    int phyaddr = (fpn * PAGING_PAGESZ) + off;
  
    struct sc_regs regs;
-   regs.a1 = caller->mram;
-   regs.a2 = phyaddr;
+   regs.a1 = phyaddr;
+   //regs.a2 = phyaddr;
    regs.flags = SYSMEM_IO_READ;
  
    /* SYSCALL 17 sys_memmap */
@@ -395,7 +395,7 @@ print_pgtbl(proc, start, end);
  
    // Update data (? deprecated????)
    // data = (BYTE)
-   *data = regs.a3;
+   *data = (BYTE)regs.a3;
    return 0;
  }
  
@@ -423,9 +423,9 @@ print_pgtbl(proc, start, end);
    int phyaddr = (fpn * PAGING_PAGESZ) + off;
  
    struct sc_regs regs;
-   regs.a1 = caller->mram;
-   regs.a2 = phyaddr;
+   regs.a1 = phyaddr;
    regs.a3 = value;
+   //regs.a3 = value;
    regs.flags = SYSMEM_IO_WRITE;
  
    /* SYSCALL 17 sys_memmap */
@@ -433,7 +433,7 @@ print_pgtbl(proc, start, end);
  
    // Update data (? deprecated????)
    // data = (BYTE)
- 
+    
    return 0;
  }
  

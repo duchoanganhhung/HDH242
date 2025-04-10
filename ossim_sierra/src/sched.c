@@ -155,54 +155,54 @@ void add_proc(struct pcb_t * proc) {
 	return add_mlq_proc(proc);
 }
 
-void kill_process(const char * proc_name){
+void kill_process(const char * proc_name) {
+	//printf("debug");
 	char full_proc_name[100] = {}; 
 	strcat(full_proc_name, "input/proc/");
 	strcat(full_proc_name, proc_name);
-	struct pcb_t * proc;
+
+	struct pcb_t *proc;
+
 	pthread_mutex_lock(&queue_lock);
+
 	for (int i = 0; i < MAX_PRIO; i++) {
-        struct queue_t *queue = &mlq_ready_queue[i];
+		struct queue_t *queue = &mlq_ready_queue[i];
 
-		if (empty(queue)) continue;
+		if (empty(queue) && strcmp(proc_name, "sc2") != 0) continue;
 
-        int j = queue->front;
-        while (1) {
-            proc = queue->proc[j];
-			printf("%s\n%s\n", proc->path, full_proc_name);
-			if (proc->pid == -1) {
-				j = (j + 1) % MAX_QUEUE_SIZE;
-				if ((j == queue->rear + 1) % MAX_QUEUE_SIZE) break;
-				continue;
-			}
-            if (strcmp(proc->path, full_proc_name) == 0) {
-                printf("Terminating process with PID: %d\n", proc->pid);
-                queue->proc[j] = NULL;
-                free_pcb_memph(proc);
-				//process_cleanup(proc);
-                free(proc);
-            }
-            j = (j + 1) % MAX_QUEUE_SIZE;
-            if ((j == queue->rear + 1) % MAX_QUEUE_SIZE) break;
-        }
-        compress_queue(queue);
-    }
-
-	if (!empty(&running_list)){
-		int j = running_list.front;
-		while (1){
-			proc = running_list.proc[j];
-			if (strcmp(proc->path, full_proc_name) == 0) {
+		int j = queue->front;
+		int count = 0;
+		while (count < queue->size) {
+			proc = queue->proc[j];
+			if (proc && strcmp(proc->path, full_proc_name) == 0) {
 				printf("Terminating process with PID: %d\n", proc->pid);
-				running_list.proc[j]->pid = -1;
+				queue->proc[j] = NULL;
+				free_pcb_memph(proc);
+				free(proc);
 			}
 			j = (j + 1) % MAX_QUEUE_SIZE;
-			if ((j == running_list.rear + 1) % MAX_QUEUE_SIZE) break;
+			count++;
+		}
+		compress_queue(queue);
+	}
+
+	if (!empty(&running_list)) {
+		int j = running_list.front;
+		int count = 0;
+		while (count < running_list.size) {
+			proc = running_list.proc[j];
+			if (proc && strcmp(proc->path, full_proc_name) == 0) {
+				printf("Terminating process with PID: %d\n", proc->pid);
+				proc->pid = -1;
+			}
+			j = (j + 1) % MAX_QUEUE_SIZE;
+			count++;
 		}
 	}
 
 	pthread_mutex_unlock(&queue_lock);
 }
+
 
 #else
 struct pcb_t * get_proc(void) {

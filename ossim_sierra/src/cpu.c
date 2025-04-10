@@ -104,7 +104,7 @@ switch (ins.opcode)
 #endif
 		break;
 	case SYSCALL:
-		printf("debug");
+		//printf("debug");
 		stat = libsyscall(proc, ins.arg_0, ins.arg_1, ins.arg_2, ins.arg_3);
 		break;
 	default:
