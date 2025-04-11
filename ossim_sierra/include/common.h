@@ -76,12 +76,12 @@ struct page_table_t
 /* PCB, describe information about a process */
 struct pcb_t
 {
-	uint32_t pid;		 // PID
-	uint32_t priority;	 // Default priority, this legacy process based (FIXED)
+	uint32_t pid;	   // PID
+	uint32_t priority; // Default priority, this legacy process based (FIXED)
 	char path[100];
 	struct code_seg_t *code; // Code segment
-	addr_t regs[10];	 // Registers, store address of allocated regions
-	uint32_t pc;		 // Program pointer, point to the next instruction
+	addr_t regs[10];		 // Registers, store address of allocated regions
+	uint32_t pc;			 // Program pointer, point to the next instruction
 	struct queue_t *ready_queue;
 	struct queue_t *running_list;
 #ifdef MLQ_SCHED
@@ -96,9 +96,12 @@ struct pcb_t
 	struct memphy_struct **mswp;
 	struct memphy_struct *active_mswp;
 	uint32_t active_mswp_id;
+#ifdef MM_PAGING_HEAP_GODOWN
+	uint32_t vmemsz;
+#endif
 #endif
 	struct page_table_t *page_table; // Page table
-	uint32_t bp;			 // Break pointer
+	uint32_t bp;					 // Break pointer
 };
 
 #endif

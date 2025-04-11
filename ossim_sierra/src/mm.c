@@ -1,4 +1,4 @@
-// #ifdef MM_PAGING
+#ifdef MM_PAGING
 /*
  * PAGING based Memory Management
  * Memory management unit mm/mm.c
@@ -19,10 +19,12 @@ int init_pte(uint32_t *pte,
              int swptyp, // swap type
              int swpoff) // swap offset
 {
-  if (pre != 0) {
-    if (swp == 0) { // Non swap ~ page online
+  if (pre != 0)
+  {
+    if (swp == 0)
+    { // Non swap ~ page online
       if (fpn == 0)
-        return -1;  // Invalid setting
+        return -1; // Invalid setting
 
       /* Valid setting with FPN */
       SETBIT(*pte, PAGING_PTE_PRESENT_MASK);
@@ -86,15 +88,17 @@ int vmap_page_range(struct pcb_t *caller,           // process call
                     struct framephy_struct *frames, // list of the mapped frames
                     struct vm_rg_struct *ret_rg)    // return mapped region, the real mapped fp
 {                                                   // no guarantee all given pages are mapped
-  //struct framephy_struct *fpit;
+  struct framephy_struct *fpit;
+  // int fpn;
   int pgit = 0;
   int pgn = PAGING_PGN(addr);
 
-  /* TODO: update the rg_end and rg_start of ret_rg 
+  /* TODO: update the rg_end and rg_start of ret_rg
   //ret_rg->rg_end =  ....
   //ret_rg->rg_start = ...
   //ret_rg->vmaid = ...
   */
+  ret_rg->rg_end = ret_rg->rg_start = addr;
 
   /* TODO map range of frame to address space
    *      [addr to addr + pgnum*PAGING_PAGESZ
@@ -103,9 +107,40 @@ int vmap_page_range(struct pcb_t *caller,           // process call
 
   /* Tracking for later page replacement activities (if needed)
    * Enqueue new usage page */
-  enlist_pgn_node(&caller->mm->fifo_pgn, pgn + pgit);
+  fpit = frames;
+  // Init page table entry
+  uint32_t *pte = malloc(sizeof(uint32_t));
+  if (pte == NULL)
+    return -1;
+  init_pte(pte, 1, 1, 0, 0, 0, 0);
 
-  return 0;
+  for (; pgit < pgnum; pgit++)
+  {
+    if (fpit == NULL)
+      return -1;
+
+    int temp_addr = (ret_rg->vmaid) ? (addr - pgit * PAGING_PAGESZ) : (addr + pgit * PAGING_PAGESZ);
+    pgn = PAGING_PGN(temp_addr);
+    pte_set_fpn(&(caller->mm->pgd[pgn]), fpit->fpn);
+
+    // update rg_end of ret_rg
+    ret_rg->rg_end += PAGING_PAGESZ;
+
+    // delete mapped frame
+    struct framephy_struct *mapped_fp = fpit;
+    fpit = fpit->fp_next;
+    free(mapped_fp);
+
+    // Enqueue new usage page
+    enlist_pgn_node(&caller->mm->fifo_pgn, pgn);
+  }
+
+  // Cleaning up
+  free(pte);
+
+  caller->mram->used_fp_list = frames;
+
+  return (pgit > 0) ? 0 : -1;
 }
 
 /*
@@ -120,21 +155,27 @@ int alloc_pages_range(struct pcb_t *caller, int req_pgnum, struct framephy_struc
   int pgit, fpn;
   struct framephy_struct *newfp_str = NULL;
 
-  /* TODO: allocate the page 
+  /* TODO: allocate the page
   //caller-> ...
   //frm_lst-> ...
   */
 
   for (pgit = 0; pgit < req_pgnum; pgit++)
   {
-  /* TODO: allocate the page 
-   */
+    /* TODO: allocate the page
+     */
     if (MEMPHY_get_freefp(caller->mram, &fpn) == 0)
     {
+      newfp_str = malloc(sizeof(struct framephy_struct));
+      if (newfp_str == NULL)
+        return -1;
       newfp_str->fpn = fpn;
+      newfp_str->fp_next = *frm_lst;
+      *frm_lst = newfp_str;
     }
     else
     { // TODO: ERROR CODE of obtaining somes but not enough frames
+      return -3000;
     }
   }
 
@@ -180,6 +221,7 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
    * do the swaping all to swapper to get the all in ram */
   vmap_page_range(caller, mapstart, incpgnum, frm_lst, ret_rg);
 
+  printf("[vm_map_ram] Mapping %d pages from 0x%x to 0x%x\n", incpgnum, astart, aend);
   return 0;
 }
 
@@ -228,12 +270,14 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 
   /* TODO update VMA0 next */
   // vma0->next = ...
+  vma0->vm_next = NULL;
 
   /* Point vma owner backward */
-  vma0->vm_mm = mm; 
+  vma0->vm_mm = mm;
 
   /* TODO: update mmap */
-  //mm->mmap = ...
+  // mm->mmap = ...
+  mm->mmap = vma0;
 
   return 0;
 }
@@ -273,7 +317,11 @@ int print_list_fp(struct framephy_struct *ifp)
   struct framephy_struct *fp = ifp;
 
   printf("print_list_fp: ");
-  if (fp == NULL) { printf("NULL list\n"); return -1;}
+  if (fp == NULL)
+  {
+    printf("NULL list\n");
+    return -1;
+  }
   printf("\n");
   while (fp != NULL)
   {
@@ -289,7 +337,11 @@ int print_list_rg(struct vm_rg_struct *irg)
   struct vm_rg_struct *rg = irg;
 
   printf("print_list_rg: ");
-  if (rg == NULL) { printf("NULL list\n"); return -1; }
+  if (rg == NULL)
+  {
+    printf("NULL list\n");
+    return -1;
+  }
   printf("\n");
   while (rg != NULL)
   {
@@ -305,7 +357,11 @@ int print_list_vma(struct vm_area_struct *ivma)
   struct vm_area_struct *vma = ivma;
 
   printf("print_list_vma: ");
-  if (vma == NULL) { printf("NULL list\n"); return -1; }
+  if (vma == NULL)
+  {
+    printf("NULL list\n");
+    return -1;
+  }
   printf("\n");
   while (vma != NULL)
   {
@@ -319,14 +375,18 @@ int print_list_vma(struct vm_area_struct *ivma)
 int print_list_pgn(struct pgn_t *ip)
 {
   printf("print_list_pgn: ");
-  if (ip == NULL) { printf("NULL list\n"); return -1; }
+  if (ip == NULL)
+  {
+    printf("NULL list\n");
+    return -1;
+  }
   printf("\n");
   while (ip != NULL)
   {
     printf("va[%d]-\n", ip->pgn);
     ip = ip->pg_next;
   }
-  printf("n");
+  printf("\n");
   return 0;
 }
 
@@ -339,21 +399,48 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
   {
     pgn_start = 0;
     struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, 0);
+    if (cur_vma == NULL)
+    {
+      printf("Error: cur_vma is NULL\n");
+      return -1;
+    }
     end = cur_vma->vm_end;
+    // printf("end = %d\n", end);
   }
   pgn_start = PAGING_PGN(start);
   pgn_end = PAGING_PGN(end);
 
-  printf("print_pgtbl: %d - %d", start, end);
-  if (caller == NULL) { printf("NULL caller\n"); return -1;}
-  printf("\n");
+  printf("print_pgtbl: %d - %d\n", start, end);
+  if (caller == NULL)
+  {
+    printf("NULL caller\n");
+    return -1;
+  }
+
+  if (pgn_start >= pgn_end)
+  {
+    // ++pgn_end;
+    printf("Invalid page range: %d - %d\n", pgn_start, pgn_end);
+    return -1;
+  }
+  // return -1; // No valid range to print.
 
   for (pgit = pgn_start; pgit < pgn_end; pgit++)
   {
+
     printf("%08ld: %08x\n", pgit * sizeof(uint32_t), caller->mm->pgd[pgit]);
   }
 
+  for (pgit = pgn_start; pgit < pgn_end; pgit++)
+  {
+    uint32_t pte = caller->mm->pgd[pgit];
+
+    int frame_number = PAGING_FPN(pte);
+    printf("Page Number: %d -> Frame Number: %d\n", pgit, frame_number);
+  }
+
+  printf("================================================================\n");
   return 0;
 }
 
-// #endif
+#endif

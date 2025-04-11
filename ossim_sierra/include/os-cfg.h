@@ -3,11 +3,13 @@
 
 #define MLQ_SCHED 1
 #define MAX_PRIO 140
-
+#ifndef MM_PAGING
 #define MM_PAGING
-//#define MM_FIXED_MEMSZ
-//#define VMDBG 1
-//#define MMDBG 1
+#endif
+#define MM_PAGING_HEAP_GODOWN
+// #define MM_FIXED_MEMSZ
+// #define VMDBG 1
+// #define MMDBG 1
 #define IODUMP 1
 #define PAGETBL_DUMP 1
 
