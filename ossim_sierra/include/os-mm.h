@@ -9,7 +9,7 @@
 
 typedef char BYTE;
 typedef uint32_t addr_t;
-// typedef unsigned int uint32_t;
+typedef unsigned int uint32_t;
 
 struct pgn_t
 {
