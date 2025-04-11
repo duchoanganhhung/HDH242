@@ -76,7 +76,7 @@ int run(struct pcb_t *proc)
 		stat = calc(proc);
 		break;
 	case ALLOC:
-		printf("DEBUG: entering ALLOC instruction...\n");
+		// printf("DEBUG: entering ALLOC instruction...\n");
 #ifdef MM_PAGING
 		stat = liballoc(proc, ins.arg_0, ins.arg_1);
 #else

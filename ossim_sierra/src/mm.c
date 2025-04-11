@@ -1,4 +1,4 @@
-// #ifdef MM_PAGING
+#ifdef MM_PAGING
 /*
  * PAGING based Memory Management
  * Memory management unit mm/mm.c
@@ -89,7 +89,7 @@ int vmap_page_range(struct pcb_t *caller,           // process call
                     struct vm_rg_struct *ret_rg)    // return mapped region, the real mapped fp
 {                                                   // no guarantee all given pages are mapped
   struct framephy_struct *fpit;
-  int fpn;
+  // int fpn;
   int pgit = 0;
   int pgn = PAGING_PGN(addr);
 
@@ -117,20 +117,22 @@ int vmap_page_range(struct pcb_t *caller,           // process call
   for (; pgit < pgnum; pgit++)
   {
     if (fpit == NULL)
-      break;
+      return -1;
 
-    fpn = fpit->fpn;
+    int temp_addr = (ret_rg->vmaid) ? (addr - pgit * PAGING_PAGESZ) : (addr + pgit * PAGING_PAGESZ);
+    pgn = PAGING_PGN(temp_addr);
+    pte_set_fpn(&(caller->mm->pgd[pgn]), fpit->fpn);
 
-    pte_set_swap(pte, 0, 0);
-    pte_set_fpn(pte, fpn);
-
-    caller->mm->pgd[pgn + pgit] = *pte;
-
+    // update rg_end of ret_rg
     ret_rg->rg_end += PAGING_PAGESZ;
 
+    // delete mapped frame
+    struct framephy_struct *mapped_fp = fpit;
     fpit = fpit->fp_next;
+    free(mapped_fp);
 
-    enlist_pgn_node(&caller->mm->fifo_pgn, pgn + pgit);
+    // Enqueue new usage page
+    enlist_pgn_node(&caller->mm->fifo_pgn, pgn);
   }
 
   // Cleaning up
@@ -417,6 +419,7 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
 
   if (pgn_start >= pgn_end)
   {
+    // ++pgn_end;
     printf("Invalid page range: %d - %d\n", pgn_start, pgn_end);
     return -1;
   }
@@ -440,4 +443,4 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
   return 0;
 }
 
-// #endif
+#endif

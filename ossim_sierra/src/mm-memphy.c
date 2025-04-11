@@ -1,4 +1,4 @@
-// #ifdef MM_PAGING
+#ifdef MM_PAGING
 /*
  * PAGING based Memory Management
  * Memory physical module mm/mm-memphy.c
@@ -169,6 +169,13 @@ int MEMPHY_dump(struct memphy_struct *mp)
       return -1;
    }
 
+   // Print the memory content at the specified address
+   for (int i = 0; i < mp->maxsz; i++)
+   {
+      if (mp->storage[i] != 0) // Chỉ in ra các byte có dữ liệu khác 0
+         printf("BYTE %08X: %d\n", i, mp->storage[i]);
+   }
+
    return 0;
 }
 
@@ -204,4 +211,4 @@ int init_memphy(struct memphy_struct *mp, int max_size, int randomflg)
    return 0;
 }
 
-// #endif
+#endif
