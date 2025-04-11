@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <stdio.h>
 
+#define RAM_SIZE (1 << ADDRESS_SIZE)
 static BYTE _ram[RAM_SIZE];
 
 static struct

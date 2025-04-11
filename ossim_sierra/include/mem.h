@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#define RAM_SIZE (1 << ADDRESS_SIZE)
+// #define RAM_SIZE (1 << ADDRESS_SIZE)
 
 /* Init related parameters, must be called before being used */
 void init_mem(void);
