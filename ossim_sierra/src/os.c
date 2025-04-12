@@ -190,22 +190,16 @@ static void read_config(const char *path)
 	 */
 
 	fscanf(file, "%d\n", &memramsz);
+	// printf("result: %d\n", result);
+
 	for (sit = 0; sit < PAGING_MAX_MMSWP; sit++)
 	{
-		if (&memswpsz[sit] != 0)
-		{
-			fscanf(file, "%d", &(memswpsz[sit]));
-			printf("Hello");
-			printf("Memory Swap %d Size: %d\n", sit, memswpsz[sit]);
-		}
-		else
-		{
-			break;
-		}
+		fscanf(file, "%d", &(memswpsz[sit]));
+
+		// printf("Memory Swap %d Size: %d\n", sit, memswpsz[sit]);
 	}
 
 	fscanf(file, "\n"); /* Final character */
-
 #endif
 #endif
 
