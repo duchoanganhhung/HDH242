@@ -11,4 +11,4 @@ make clean && make all
 ./os <input-file>
 ```
 > [!IMPORTANT]
-> SỬ DỤNG MÁY ẢO ĐỂ CHẠY CHƯƠNG TRÌNH CÀI ĐẶT HỆ ĐIỀU HÀNH LINUX KERNEL, KHÔNG DÙNG WINDOWS HOẶC WSL ĐỂ CHẠY (SẼ BỊ LỖI KHÔNG ĐỌC ĐƯỢC FILE PROC)
+> SỬ DỤNG MÁY ẢO CÀI ĐẶT HỆ ĐIỀU HÀNH LINUX KERNEL ĐỂ CHẠY CHƯƠNG TRÌNH , KHÔNG DÙNG WINDOWS HOẶC WSL ĐỂ CHẠY (SẼ BỊ LỖI KHÔNG ĐỌC ĐƯỢC FILE PROC)
