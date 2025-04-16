@@ -396,21 +396,24 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller, 
   if (pg_getpage(mm, pgn, &fpn, caller) != 0)
     return -1; /* invalid page access */
 
-  /* Calculate physical address */
-  int phyaddr = (fpn << (PAGING_ADDR_OFFST_HIBIT + 1)) + off;
-
-  /* Set up system call arguments for memory read */
+  /* TODO
+   *  MEMPHY_read(caller->mram, phyaddr, data);
+   *  MEMPHY READ
+   *  SYSCALL 17 sys_memmap with SYSMEM_IO_READ
+   */
+  // int phyaddr = fpn * PAGING_PAGESZ + (addr & PAGING_OFFST_MASK);
+  int phyaddr = fpn * PAGING_PAGESZ + off;
   struct sc_regs regs;
-  regs.a1 = SYSMEM_IO_READ; // Operation: Read from memory
-  regs.a2 = phyaddr;        // Physical address to read from
-  regs.a3 = 0;              // Not used for read operation
+  regs.a1 = SYSMEM_IO_READ; // lenh
+  regs.a2 = phyaddr;
+  // regs.a3 = (BYTE)data;
+  int syscall_ret = syscall(caller, 17, &regs);
+  if (syscall_ret < 0)
+    return -1;
+  /* SYSCALL 17 sys_memmap */
 
-  /* SYSCALL 17 sys_memmap to read data */
-  syscall(caller, 17, &regs);
-
-  /* Update data with read value */
-  *data = (BYTE)regs.a4; // Return value stored in a4
-
+  // Update data
+  *data = regs.a3;
   return 0;
 }
 
